@@ -1,0 +1,17 @@
+{
+  "name": "buffer-stream-js",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Fabeuluci"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:fabeuluci/buffer-stream-js.git"
+  },
+  "main": "out/index.js",
+  "typings": "out/index.d.ts",
+  "dependencies": {
+    "utf8-fl": "^1.0.0"
+  }
+}
