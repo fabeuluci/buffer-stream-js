@@ -28,16 +28,25 @@ export class BufferStream {
         return new BufferStream(new Uint8Array(size), options);
     }
     
-    setInternalBuffer(buffer: ArrayBuffer|ArrayBufferView): void {
+    static getUint8Array(buffer: ArrayBuffer|ArrayBufferView): Uint8Array {
+        if (buffer instanceof Uint8Array) {
+            return buffer;
+        }
         if (buffer instanceof ArrayBuffer) {
-            this.buffer = new Uint8Array(buffer);
+            return new Uint8Array(buffer);
         }
-        else if (ArrayBuffer.isView(buffer)) {
-            this.buffer = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+        if (ArrayBuffer.isView(buffer)) {
+            return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
         }
-        else {
-            throw new Error("Invalid buffer");
-        }
+        throw new Error("Invalid buffer");
+    }
+    
+    static getArrayLike(data: ArrayBuffer|ArrayBufferView|number[]): Uint8Array|number[] {
+        return Array.isArray(data) ? data : BufferStream.getUint8Array(data);
+    }
+    
+    setInternalBuffer(buffer: ArrayBuffer|ArrayBufferView): void {
+        this.buffer = BufferStream.getUint8Array(buffer);
         this.view = new DataView(this.buffer.buffer, this.buffer.byteOffset, this.buffer.byteLength);
     }
     
@@ -187,11 +196,12 @@ export class BufferStream {
         this.buffer.set(oldBuffer);
     }
     
-    write(data: Uint8Array|number[]): number {
-        this.extend(data.length);
-        this.buffer.set(data, this.offset);
-        this.offset += data.length;
-        return data.length;
+    write(data: ArrayBuffer|ArrayBufferView|number[]): number {
+        let buffer = BufferStream.getArrayLike(data);
+        this.extend(buffer.length);
+        this.buffer.set(buffer, this.offset);
+        this.offset += buffer.length;
+        return buffer.length;
     }
     
     writeInt8(data: number): void {
@@ -430,9 +440,10 @@ export class BufferStream {
         return this.read(length);
     }
     
-    writePacked(data: Uint8Array|number[]): number {
-        let lengthSize = this.writeUInt(data.length);
-        return lengthSize + this.write(data);
+    writePacked(data: ArrayBuffer|ArrayBufferView|number[]): number {
+        let buffer = BufferStream.getArrayLike(data);
+        let lengthSize = this.writeUInt(buffer.length);
+        return lengthSize + this.write(buffer);
     }
     
     //-----------------------------------
@@ -653,9 +664,10 @@ export class BufferStream {
         return new BufferStream(data).readPacked();
     }
     
-    static writePacked(data: Uint8Array|number[]): Uint8Array {
-        let stream = BufferStream.alloc(8 + data.length);
-        stream.writePacked(data);
+    static writePacked(data: ArrayBuffer|ArrayBufferView|number[]): Uint8Array {
+        let buffer = BufferStream.getArrayLike(data);
+        let stream = BufferStream.alloc(8 + buffer.length);
+        stream.writePacked(buffer);
         return stream.getLeftBuffer();
     }
     
