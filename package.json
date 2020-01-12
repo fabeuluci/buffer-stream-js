@@ -12,6 +12,7 @@
   "main": "out/index.js",
   "typings": "out/index.d.ts",
   "dependencies": {
+    "uint8array-utils": "^1.0.0",
     "utf8-fl": "^1.0.0"
   }
 }

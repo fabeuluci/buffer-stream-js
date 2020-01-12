@@ -1,4 +1,5 @@
 import {Utf8} from "utf8-fl";
+import {Uint8ArrayUtils} from "uint8array-utils";
 
 export interface BufferStreamOptions {
     offset?: number;
@@ -28,25 +29,8 @@ export class BufferStream {
         return new BufferStream(new Uint8Array(size), options);
     }
     
-    static getUint8Array(buffer: ArrayBuffer|ArrayBufferView): Uint8Array {
-        if (buffer instanceof Uint8Array) {
-            return buffer;
-        }
-        if (buffer instanceof ArrayBuffer) {
-            return new Uint8Array(buffer);
-        }
-        if (ArrayBuffer.isView(buffer)) {
-            return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-        }
-        throw new Error("Invalid buffer");
-    }
-    
-    static getArrayLike(data: ArrayBuffer|ArrayBufferView|number[]): Uint8Array|number[] {
-        return Array.isArray(data) ? data : BufferStream.getUint8Array(data);
-    }
-    
     setInternalBuffer(buffer: ArrayBuffer|ArrayBufferView): void {
-        this.buffer = BufferStream.getUint8Array(buffer);
+        this.buffer = Uint8ArrayUtils.cast(buffer);
         this.view = new DataView(this.buffer.buffer, this.buffer.byteOffset, this.buffer.byteLength);
     }
     
@@ -197,7 +181,7 @@ export class BufferStream {
     }
     
     write(data: ArrayBuffer|ArrayBufferView|number[]): number {
-        let buffer = BufferStream.getArrayLike(data);
+        let buffer = Uint8ArrayUtils.arrayLike(data);
         this.extend(buffer.length);
         this.buffer.set(buffer, this.offset);
         this.offset += buffer.length;
@@ -441,7 +425,7 @@ export class BufferStream {
     }
     
     writePacked(data: ArrayBuffer|ArrayBufferView|number[]): number {
-        let buffer = BufferStream.getArrayLike(data);
+        let buffer = Uint8ArrayUtils.arrayLike(data);
         let lengthSize = this.writeUInt(buffer.length);
         return lengthSize + this.write(buffer);
     }
@@ -665,7 +649,7 @@ export class BufferStream {
     }
     
     static writePacked(data: ArrayBuffer|ArrayBufferView|number[]): Uint8Array {
-        let buffer = BufferStream.getArrayLike(data);
+        let buffer = Uint8ArrayUtils.arrayLike(data);
         let stream = BufferStream.alloc(8 + buffer.length);
         stream.writePacked(buffer);
         return stream.getLeftBuffer();
